@@ -9,12 +9,16 @@ public interface PlanOps {
         return new HashMap<>();
     }
 
-    default Map<String, Object> fetchPlan(String planName, String schema) {
+    default Map<String, Object> fetchPlan(String planId) {
         return new HashMap<>();
     }
 
-    default void deletePlan(String planName, String schema) {
-        return ;
+    default Map<String, Object> deletePlan(String planId) {
+        return new HashMap<>();
     }
 
+    default Map<String, Object> updatePlan(Map<String, Object> plan, String schema)
+    {
+        return new HashMap<>();
+    }
 }

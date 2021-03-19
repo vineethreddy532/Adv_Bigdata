@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
 import java.util.Map;
 
 @Service
@@ -18,13 +19,12 @@ public class PlanSchemaImpl implements SchemaOps {
     RedisTemplate redisTemplate;
 
     @Override
-    public Map<String, Object> addSchema(Map<String, Object> schemaObject, String schemaName) {
+    public Map<String, Object> addSchema(Map<String, Object> schemaObject) {
 
         ValueOperations valueOperations = redisTemplate.opsForValue();
 
         try {
             valueOperations.set(Constants.INSURANCE_SCHEMA, schemaObject);
-//            throw new RedisException(" udheer ", "hha");
             return schemaObject;
         } catch (Exception e){
             throw new RedisException(e.getMessage(), Constants.BAD_REQUEST);
@@ -46,4 +46,15 @@ public class PlanSchemaImpl implements SchemaOps {
             throw new RedisException(e.getMessage(), Constants.NOT_FOUND);
         }
     }
+
+    @Override
+    public Map<String, Object> deleteSchema(String schemaName) {
+        ValueOperations valueOperations = redisTemplate.opsForValue();
+
+        valueOperations.set(schemaName, null);
+        Map<String, Object> response  = new HashMap<>();
+        response.put("message", "Schema deleted successfully");
+        return response;
+    }
 }
+
