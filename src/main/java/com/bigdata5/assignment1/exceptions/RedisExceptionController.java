@@ -19,6 +19,8 @@ public class RedisExceptionController {
 
         if (Constants.BAD_REQUEST.equalsIgnoreCase(exception.getErrCode())) {
             return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        } else if (Constants.UNAUTHORIZED.equalsIgnoreCase(exception.getErrCode())){
+            return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
         } else {
             return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
         }

@@ -21,4 +21,9 @@ public interface PlanOps {
     {
         return new HashMap<>();
     }
+
+    default Map<String, Object> updateLinkedPlanServices(Map<String, Object> plan, String schema)
+    {
+        return new HashMap<>();
+    }
 }

@@ -8,4 +8,8 @@ public class Constants {
 
     public static String NOT_FOUND = "Not found";
 
+    public static String STATIC_USERNAME = "qwerty1234asdf5678";
+
+    public static String UNAUTHORIZED = "unauthorized";
+
 }
