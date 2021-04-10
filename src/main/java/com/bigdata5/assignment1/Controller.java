@@ -5,7 +5,9 @@ import com.bigdata5.assignment1.authorization.JwtTokenUtil;
 import com.bigdata5.assignment1.constants.Constants;
 import com.bigdata5.assignment1.exceptions.RedisException;
 import com.bigdata5.assignment1.service.PlanOps;
+import com.bigdata5.assignment1.service.RedisMessagePublisher;
 import com.bigdata5.assignment1.service.SchemaOps;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.everit.json.schema.Schema;
 import org.everit.json.schema.loader.SchemaLoader;
@@ -253,23 +255,43 @@ public class Controller {
         }
 
         // Supports only addition of 1 element to the array per PATCH request
-        Map<String,Object> patchElement = ((ArrayList<Map<String,Object>>)planObject.get("linkedPlanServices")).get(0);
+        // Map<String,Object> patchElement = ((ArrayList<Map<String,Object>>)planObject.get("linkedPlanServices")).get(0);
 
-        boolean isMatchFound = false;
-        for (Map<String,Object> linkedPlan : existingPlanServices){
-            if(linkedPlan.get("objectId").equals(patchElement.get("objectId"))) {
-                //Remove existing one and add the provided one in the body
-                existingPlanServices.remove(linkedPlan);
-                existingPlanServices.add(patchElement);
-                isMatchFound = true;
-                break;
+        for(Map<String, Object> patchEle : ((ArrayList<Map<String,Object>>)planObject.get("linkedPlanServices"))) {
+
+            boolean isMatchFound = false;
+            for (Map<String,Object> linkedPlan : existingPlanServices){
+                if(linkedPlan.get("objectId").equals(patchEle.get("objectId"))) {
+                    //Remove existing one and add the provided one in the body
+                    existingPlanServices.remove(linkedPlan);
+                    existingPlanServices.add(patchEle);
+                    isMatchFound = true;
+                    break;
+                }
             }
+
+            if(!isMatchFound) {
+                existingPlanServices.add(patchEle);
+                existingPlanServiceIds.add((String) patchEle.get("objectId"));
+            }
+
         }
 
-        if(!isMatchFound) {
-            existingPlanServices.add(patchElement);
-            existingPlanServiceIds.add((String) patchElement.get("objectId"));
-        }
+//        boolean isMatchFound = false;
+//        for (Map<String,Object> linkedPlan : existingPlanServices){
+//            if(linkedPlan.get("objectId").equals(patchElement.get("objectId"))) {
+//                //Remove existing one and add the provided one in the body
+//                existingPlanServices.remove(linkedPlan);
+//                existingPlanServices.add(patchElement);
+//                isMatchFound = true;
+//                break;
+//            }
+//        }
+//
+//        if(!isMatchFound) {
+//            existingPlanServices.add(patchElement);
+//            existingPlanServiceIds.add((String) patchElement.get("objectId"));
+//        }
 
 
         response.put("linkedPlanServices", existingPlanServices);
@@ -320,6 +342,16 @@ public class Controller {
 
 
 //##################################   TOKEN GENERATION ---- STOP     ##############################//
+
+    @Autowired
+    RedisMessagePublisher redisMessagePublisher;
+
+    @RequestMapping(value="/v1/testsub", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
+    public void processTokenValidation(@RequestBody(required = true) Map<String, Object> planObject) throws JsonProcessingException {
+
+        redisMessagePublisher.publish(planObject);
+
+    }
 
 
 }

@@ -11,6 +11,7 @@ import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import redis.clients.jedis.Jedis;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -57,6 +58,11 @@ public class PlanImpl implements PlanOps {
 
             saveToRedis(keyForlinkedPlanServicesIds, linkedPlanServicesIds);
             saveToRedis((String) plan.get("objectId"), plan);
+
+//            // Push the plan to LPUSH SO that we can consume it again and push to index
+//            Jedis jedis = new Jedis("localhost");
+//            jedis.lpush(plan.get("objectId") + "_lpush", plan);
+
 
             Map<String, Object> successResponse  = new HashMap<>();
             successResponse.put("message", "Plan added successfully");
