@@ -153,13 +153,13 @@ public class Controller {
                                                                String bearerAuth) {
 
         String token = bearerAuth.substring(7);
-        try {
-            if(!jwtTokenUtil.validateToken(token, Constants.STATIC_USERNAME)){
-                throw new RedisException("Token is expired", Constants.UNAUTHORIZED);
-            }
-        } catch (Exception e) {
-            throw new RedisException("Token is invalid", Constants.UNAUTHORIZED);
-        }
+//        try {
+//            if(!jwtTokenUtil.validateToken(token, Constants.STATIC_USERNAME)){
+//                throw new RedisException("Token is expired", Constants.UNAUTHORIZED);
+//            }
+//        } catch (Exception e) {
+//            throw new RedisException("Token is invalid", Constants.UNAUTHORIZED);
+//        }
 
         Map<String, Object> addPlanResponse =  planOps.addPlan(planObject, Constants.INSURANCE_SCHEMA);
         return new ResponseEntity<>(addPlanResponse, HttpStatus.ACCEPTED);

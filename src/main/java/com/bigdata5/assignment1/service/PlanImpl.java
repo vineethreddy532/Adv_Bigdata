@@ -27,6 +27,9 @@ public class PlanImpl implements PlanOps {
     @Autowired
     SchemaOps schemaOps;
 
+    @Autowired
+    RedisMessagePublisher redisMessagePublisher;
+
     @Override
     public Map<String, Object> addPlan(Map<String, Object> plan, String schema) {
 
@@ -59,9 +62,9 @@ public class PlanImpl implements PlanOps {
             saveToRedis(keyForlinkedPlanServicesIds, linkedPlanServicesIds);
             saveToRedis((String) plan.get("objectId"), plan);
 
-//            // Push the plan to LPUSH SO that we can consume it again and push to index
-//            Jedis jedis = new Jedis("localhost");
-//            jedis.lpush(plan.get("objectId") + "_lpush", plan);
+            // Publish whole plan to redis Publisher
+            plan.put("OPERATION", "addPlan");
+            redisMessagePublisher.publish(plan);
 
 
             Map<String, Object> successResponse  = new HashMap<>();

@@ -3,6 +3,9 @@ package com.bigdata5.assignment1.redis;
 import com.bigdata5.assignment1.service.MessagePublisher;
 import com.bigdata5.assignment1.service.RedisMessagePublisher;
 import com.bigdata5.assignment1.service.RedisMessageSubscriber;
+import org.apache.http.HttpHost;
+import org.elasticsearch.client.RestClient;
+import org.elasticsearch.client.RestHighLevelClient;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
@@ -73,6 +76,13 @@ public class Configuration {
     @Bean
     ChannelTopic topic() {
         return new ChannelTopic("messageQueue");
+    }
+
+    @Bean
+    RestHighLevelClient client() {
+        return new RestHighLevelClient(
+                RestClient.builder(
+                        new HttpHost("localhost", 9200, "http")));
     }
 
 }
