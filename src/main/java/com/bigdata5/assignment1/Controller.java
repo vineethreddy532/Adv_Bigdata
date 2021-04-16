@@ -20,6 +20,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.security.SignatureException;
 import java.util.*;
 
@@ -37,6 +38,9 @@ public class Controller {
 
     @Autowired
     JwtTokenUtil jwtTokenUtil;
+
+    @Autowired
+    RedisMessagePublisher redisMessagePublisher;
 
 
 
@@ -99,7 +103,7 @@ public class Controller {
      */
     @RequestMapping(value="/v1/schema", method = RequestMethod.DELETE, consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Map<String, Object>> deleteSchema(@RequestHeader(value = "Authorization", required = true)
-                                                                        String bearerAuth) {
+                                                                        String bearerAuth) throws IOException {
 
 
         String token = bearerAuth.substring(7);
@@ -153,13 +157,13 @@ public class Controller {
                                                                String bearerAuth) {
 
         String token = bearerAuth.substring(7);
-//        try {
-//            if(!jwtTokenUtil.validateToken(token, Constants.STATIC_USERNAME)){
-//                throw new RedisException("Token is expired", Constants.UNAUTHORIZED);
-//            }
-//        } catch (Exception e) {
-//            throw new RedisException("Token is invalid", Constants.UNAUTHORIZED);
-//        }
+        try {
+            if(!jwtTokenUtil.validateToken(token, Constants.STATIC_USERNAME)){
+                throw new RedisException("Token is expired", Constants.UNAUTHORIZED);
+            }
+        } catch (Exception e) {
+            throw new RedisException("Token is invalid", Constants.UNAUTHORIZED);
+        }
 
         Map<String, Object> addPlanResponse =  planOps.addPlan(planObject, Constants.INSURANCE_SCHEMA);
         return new ResponseEntity<>(addPlanResponse, HttpStatus.ACCEPTED);
@@ -173,7 +177,7 @@ public class Controller {
     @RequestMapping(value="/v1/plan/{planId}", method = RequestMethod.DELETE, consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Map<String, Object>> deletePlan(@PathVariable String planId,
                                                           @RequestHeader(value = "Authorization", required = true)
-                                                                  String bearerAuth) {
+                                                                  String bearerAuth) throws IOException {
 
         String token = bearerAuth.substring(7);
         try {
@@ -221,7 +225,7 @@ public class Controller {
     @RequestMapping(value="/v1/plan", method = RequestMethod.PATCH, consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Map<String, Object>> patchPlan(@RequestBody(required = true) Map<String, Object> planObject,
                                                          @RequestHeader(value = "Authorization", required = true)
-                                                                 String bearerAuth) {
+                                                                 String bearerAuth) throws JsonProcessingException {
 
         String token = bearerAuth.substring(7);
         try {
@@ -297,7 +301,18 @@ public class Controller {
         response.put("linkedPlanServices", existingPlanServices);
 
         valueOperations.set(planObject.get("objectId"), response);
+
+        //Send the response to the RedisMessagePublish
+        redisMessagePublisher.publish(response);
+
+        //Send the response to the RedisMessagePublish
+        response.put("OPERATION", "patchPlan");
+        redisMessagePublisher.publish(response);
+
+
         valueOperations.set(planObject.get("objectId") + "_linkedPlanServices" , existingPlanServiceIds);
+
+
 
         return new ResponseEntity<>(response, HttpStatus.ACCEPTED);
     }
@@ -343,8 +358,6 @@ public class Controller {
 
 //##################################   TOKEN GENERATION ---- STOP     ##############################//
 
-    @Autowired
-    RedisMessagePublisher redisMessagePublisher;
 
     @RequestMapping(value="/v1/testsub", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
     public void processTokenValidation(@RequestBody(required = true) Map<String, Object> planObject) throws JsonProcessingException {

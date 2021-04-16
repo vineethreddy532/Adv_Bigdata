@@ -2,6 +2,11 @@ package com.bigdata5.assignment1.service;
 
 import com.bigdata5.assignment1.constants.Constants;
 import com.bigdata5.assignment1.exceptions.RedisException;
+import org.apache.http.HttpHost;
+import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
+import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.client.RestClient;
+import org.elasticsearch.client.RestHighLevelClient;
 import org.everit.json.schema.Schema;
 import org.everit.json.schema.loader.SchemaLoader;
 import org.json.JSONObject;
@@ -13,6 +18,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import redis.clients.jedis.Jedis;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -109,6 +115,10 @@ public class PlanImpl implements PlanOps {
             valueOperations.set(plan.get("objectId") + "_linkedPlanServices", linkedPlanServicesIds);
             valueOperations.set(plan.get("objectId"), plan);
 
+            // Publish whole plan to redis Publisher
+            plan.put("OPERATION", "updatePlan");
+            redisMessagePublisher.publish(plan);
+
             Map<String, Object> k  = new HashMap<>();
             k.put("message", "Plan is Updated successfully");
             return k;
@@ -119,7 +129,7 @@ public class PlanImpl implements PlanOps {
     }
 
     @Override
-    public Map<String, Object> deletePlan(String planId) {
+    public Map<String, Object> deletePlan(String planId) throws IOException {
 
         //Set the list of linkedPlanServices to null as we dont have the plan for this
         saveToRedis(planId + "_linkedPlanServices" , null);
@@ -127,6 +137,15 @@ public class PlanImpl implements PlanOps {
 
         Map<String, Object> response  = new HashMap<>();
         response.put("message", "Plan deleted successfully");
+
+        RestHighLevelClient client1 = new RestHighLevelClient(
+                RestClient.builder(
+                        new HttpHost("localhost", 9200, "http")));
+
+        // Call index API and delete the plan
+        DeleteIndexRequest request = new DeleteIndexRequest("plan");
+        client1.indices().delete(request, RequestOptions.DEFAULT);
+
         return response;
     }
 

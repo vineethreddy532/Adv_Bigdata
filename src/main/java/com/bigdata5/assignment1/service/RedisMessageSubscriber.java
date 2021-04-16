@@ -2,19 +2,22 @@ package com.bigdata5.assignment1.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sun.org.apache.xerces.internal.xs.datatypes.ObjectList;
 import org.apache.http.HttpHost;
 import org.elasticsearch.action.index.IndexRequest;
-import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
-import org.json.JSONObject;
+import org.elasticsearch.client.indices.CreateIndexRequest;
+import org.elasticsearch.common.xcontent.XContentType;
 import org.springframework.data.redis.connection.Message;
 import org.springframework.data.redis.connection.MessageListener;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 
 @Service
@@ -42,11 +45,44 @@ public class RedisMessageSubscriber implements MessageListener {
 
         if("addPlan".equalsIgnoreCase((String) jsonObject.get("OPERATION"))) {
             try {
+                createPlanIndexMapping(client);
+            } catch (Exception e) {
+                System.out.println(e);
+            }
+        }
+
+        if("addPlan".equalsIgnoreCase((String) jsonObject.get("OPERATION")) ||
+                "patchPlan".equalsIgnoreCase((String) jsonObject.get("OPERATION")) ||
+                "updatePlan".equalsIgnoreCase((String) jsonObject.get("OPERATION")) ) {
+            try {
                 putParentChildInElastic(jsonObject, client);
             } catch (Exception e) {
                 System.out.println(e);
             }
         }
+    }
+
+    private void createPlanIndexMapping(RestHighLevelClient client) throws IOException {
+
+        String map = "{\r\n" +
+                "    \"properties\": {\r\n" +
+                "      \"objectId\": {\r\n" +
+                "        \"type\": \"keyword\"\r\n" +
+                "      },\r\n" +
+                "      \"plan_join\":{\r\n" +
+                "        \"type\": \"join\",\r\n" +
+                "        \"relations\":{\r\n" +
+                "          \"plan\": [\"membercostshare\", \"planservice\"],\r\n" +
+                "          \"planservice\": [\"service\", \"membercostshare_copy\"]\r\n" +
+                "        }\r\n" +
+                "      }\r\n" +
+                "    }\r\n" +
+                "  }\r\n" +
+                "}";
+
+        CreateIndexRequest request = new CreateIndexRequest("plan");
+        request.mapping(map, XContentType.JSON);
+        client.indices().create(request, RequestOptions.DEFAULT);
     }
 
     private void putParentChildInElastic(HashMap<Object, Object> jsonObject, RestHighLevelClient client) throws JsonProcessingException {

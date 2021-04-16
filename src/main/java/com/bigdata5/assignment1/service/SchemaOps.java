@@ -1,5 +1,6 @@
 package com.bigdata5.assignment1.service;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -13,7 +14,7 @@ public interface SchemaOps {
         return new HashMap<>();
     };
 
-    default Map<String, Object> deleteSchema(String schemaName){
+    default Map<String, Object> deleteSchema(String schemaName) throws IOException {
         return new HashMap<>();
     };
 

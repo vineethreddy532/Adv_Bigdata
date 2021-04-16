@@ -5,10 +5,9 @@ import com.bigdata5.assignment1.exceptions.RedisException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -48,12 +47,14 @@ public class PlanSchemaImpl implements SchemaOps {
     }
 
     @Override
-    public Map<String, Object> deleteSchema(String schemaName) {
+    public Map<String, Object> deleteSchema(String schemaName) throws IOException {
         ValueOperations valueOperations = redisTemplate.opsForValue();
 
         valueOperations.set(schemaName, null);
         Map<String, Object> response  = new HashMap<>();
         response.put("message", "Schema deleted successfully");
+
+
         return response;
     }
 }

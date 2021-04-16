@@ -1,5 +1,6 @@
 package com.bigdata5.assignment1.service;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -13,7 +14,7 @@ public interface PlanOps {
         return new HashMap<>();
     }
 
-    default Map<String, Object> deletePlan(String planId) {
+    default Map<String, Object> deletePlan(String planId) throws IOException {
         return new HashMap<>();
     }
 

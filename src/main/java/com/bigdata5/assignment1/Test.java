@@ -39,7 +39,7 @@
 //        request.mapping(map, XContentType.JSON);
 //        CreateIndexResponse createIndexResponse = client.indices().create(request, RequestOptions.DEFAULT);
 //
-//
+
 //
 //
 //
